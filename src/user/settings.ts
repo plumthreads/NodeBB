@@ -97,7 +97,7 @@ export default function (User: UserType): void {
         settings.scrollToMyPost = getSetting(settings, 'scrollToMyPost', true) as boolean;
         settings.categoryWatchState = getSetting(settings, 'categoryWatchState', 'notwatching') as string;
 
-        const notificationTypes: string[] = await notifications.getAllNotificationTypes();
+        const notificationTypes: string[] = await notifications.getAllNotificationTypes() as string[];
         notificationTypes.forEach((notificationType: string) => {
             settings[notificationType] = getSetting(settings, notificationType, 'notification') as string;
         });
@@ -105,7 +105,8 @@ export default function (User: UserType): void {
         return settings;
     }
 
-    function getSetting(settings: SettingsObject, key: string, defaultValue: boolean | string | number): boolean | string | number{
+    function getSetting(settings: SettingsObject, key: string, defaultValue: boolean | string | number): boolean
+    | string | number {
         if (settings[key] || settings[key] === 0) {
             return settings[key] as boolean | string | number;
         // The next line calls a function in a module that has not been updated to TS yet
@@ -121,7 +122,7 @@ export default function (User: UserType): void {
     User.saveSettings = async function (uid: number, data: SettingsObject): Promise<SettingsObject> {
         // The next line calls a function in a module that has not been updated to TS yet
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-        const maxPostsPerPage = meta.config.maxPostsPerPage || 20;
+        const maxPostsPerPage: number = meta.config.maxPostsPerPage as number || 20;
         if (
             !data.postsPerPage ||
             data.postsPerPage <= 1 ||
@@ -131,7 +132,7 @@ export default function (User: UserType): void {
         }
         // The next line calls a function in a module that has not been updated to TS yet
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-        const maxTopicsPerPage = meta.config.maxTopicsPerPage || 20;
+        const maxTopicsPerPage: number = meta.config.maxTopicsPerPage as number || 20;
         if (
             !data.topicsPerPage ||
             data.topicsPerPage <= 1 ||
@@ -140,7 +141,7 @@ export default function (User: UserType): void {
             throw new Error(`[[error:invalid-pagination-value, 2, ${maxTopicsPerPage}]]`);
         }
 
-        const languageCodes = await languages.listCodes();
+        const languageCodes: string[] = await languages.listCodes() as string[];
         if (data.userLang && !languageCodes.includes(data.userLang)) {
             throw new Error('[[error:invalid-language]]');
         }
@@ -149,7 +150,7 @@ export default function (User: UserType): void {
         }
         // The next line calls a function in a module that has not been updated to TS yet
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-        data.userLang = data.userLang || meta.config.defaultLang;
+        data.userLang = data.userLang || meta.config.defaultLang as string;
 
         plugins.hooks.fire('action:user.saveSettings', { uid: uid, settings: data });
 
@@ -159,10 +160,14 @@ export default function (User: UserType): void {
             openOutgoingLinksInNewTab: data.openOutgoingLinksInNewTab,
             dailyDigestFreq: data.dailyDigestFreq || 'off',
             usePagination: data.usePagination,
-            topicsPerPage: Math.min(data.topicsPerPage, parseInt(maxTopicsPerPage, 10) || 20),
-            postsPerPage: Math.min(data.postsPerPage, parseInt(maxPostsPerPage, 10) || 20),
-            userLang: data.userLang || meta.config.defaultLang,
-            acpLang: data.acpLang || meta.config.defaultLang,
+            topicsPerPage: Math.min(data.topicsPerPage, maxTopicsPerPage || 20),
+            postsPerPage: Math.min(data.postsPerPage, maxPostsPerPage || 20),
+            // The next line calls a function in a module that has not been updated to TS yet
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+            userLang: data.userLang || meta.config.defaultLang as string,
+            // The next line calls a function in a module that has not been updated to TS yet
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+            acpLang: data.acpLang || meta.config.defaultLang as string,
             followTopicsOnCreate: data.followTopicsOnCreate,
             followTopicsOnReply: data.followTopicsOnReply,
             restrictChat: data.restrictChat,
@@ -176,21 +181,27 @@ export default function (User: UserType): void {
             categoryTopicSort: data.categoryTopicSort,
             topicPostSort: data.topicPostSort,
         };
-        const notificationTypes = await notifications.getAllNotificationTypes();
-        notificationTypes.forEach((notificationType) => {
+        const notificationTypes: string[] = await notifications.getAllNotificationTypes() as string[];
+        notificationTypes.forEach((notificationType: string) => {
             if (data[notificationType]) {
                 settings[notificationType] = data[notificationType];
             }
         });
-        const result = await plugins.hooks.fire('filter:user.saveSettings', { uid: uid, settings: settings, data: data });
+        const result = await plugins.hooks.fire('filter:user.saveSettings', { uid: uid, settings: settings, data: data }) as SettingsData;
+        // The next line calls a function in a module that has not been updated to TS yet
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         await db.setObject(`user:${uid}:settings`, result.settings);
         await User.updateDigestSetting(uid, data.dailyDigestFreq);
         return await User.getSettings(uid);
     };
 
     User.updateDigestSetting = async function (uid: number, dailyDigestFreq: string): Promise<void> {
+        // The next line calls a function in a module that has not been updated to TS yet
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         await db.sortedSetsRemove(['digest:day:uids', 'digest:week:uids', 'digest:month:uids'], uid);
         if (['day', 'week', 'biweek', 'month'].includes(dailyDigestFreq)) {
+            // The next line calls a function in a module that has not been updated to TS yet
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
             await db.sortedSetAdd(`digest:${dailyDigestFreq}:uids`, Date.now(), uid);
         }
     };
@@ -199,7 +210,8 @@ export default function (User: UserType): void {
         if (uid <= 0) {
             return;
         }
-
+        // The next line calls a function in a module that has not been updated to TS yet
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         await db.setObjectField(`user:${uid}:settings`, key, value);
     };
 }
