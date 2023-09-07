@@ -1,4 +1,4 @@
-
+/* eslint @typescript-eslint/no-use-before-define: 0 */
 import validator from 'validator';
 
 import { SettingsObject } from '../types';
@@ -8,6 +8,10 @@ import db from '../database';
 import plugins from '../plugins';
 import notifications from '../notifications';
 import languages from '../languages';
+
+type SettingsData = {
+    settings: SettingsObject
+}
 
 interface UserType {
     getSettings: (uid: number) => Promise<SettingsObject>;
@@ -23,7 +27,7 @@ export default function (User: UserType): void {
             return await onSettingsLoaded(0, {} as SettingsObject);
         }
         // The next line calls a function in a module that has not been updated to TS yet
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call        
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         let settings: SettingsObject = await db.getObject(`user:${uid}:settings`) as SettingsObject;
         settings = settings || {} as SettingsObject;
         settings.uid = uid;
@@ -36,7 +40,9 @@ export default function (User: UserType): void {
         }
 
         const keys = uids.map(uid => `user:${uid}:settings`);
-        let settings: SettingsObject[] = await db.getObjects(keys);
+        // The next line calls a function in a module that has not been updated to TS yet
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+        let settings: SettingsObject[] = await db.getObjects(keys) as SettingsObject[];
         settings = settings.map((userSettings, index) => {
             userSettings = userSettings || {} as SettingsObject;
             userSettings.uid = uids[index];
@@ -46,11 +52,14 @@ export default function (User: UserType): void {
     };
 
     async function onSettingsLoaded(uid: number, settings: SettingsObject): Promise<SettingsObject> {
-        const data = await plugins.hooks.fire('filter:user.getSettings', { uid: uid, settings: settings });
+        const data : SettingsData = await plugins.hooks.fire('filter:user.getSettings', { uid: uid, settings: settings }) as SettingsData;
         settings = data.settings;
-
-        const defaultTopicsPerPage = meta.config.topicsPerPage;
-        const defaultPostsPerPage = meta.config.postsPerPage;
+        // The next line calls a function in a module that has not been updated to TS yet
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+        const defaultTopicsPerPage: number = meta.config.topicsPerPage as number;
+        // The next line calls a function in a module that has not been updated to TS yet
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+        const defaultPostsPerPage: number = meta.config.postsPerPage as number;
 
         settings.showemail = getSetting(settings, 'showemail', false) as boolean;
         settings.showfullname = getSetting(settings, 'showfullname', false) as boolean;
@@ -58,16 +67,22 @@ export default function (User: UserType): void {
         settings.dailyDigestFreq = getSetting(settings, 'dailyDigestFreq', 'off') as string;
         settings.usePagination = getSetting(settings, 'usePagination', false) as boolean;
         settings.topicsPerPage = Math.min(
-            meta.config.maxTopicsPerPage,
+        // The next line calls a function in a module that has not been updated to TS yet
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+            meta.config.maxTopicsPerPage as number,
             settings.topicsPerPage ? settings.topicsPerPage : defaultTopicsPerPage,
             defaultTopicsPerPage
         );
         settings.postsPerPage = Math.min(
-            meta.config.maxPostsPerPage,
+        // The next line calls a function in a module that has not been updated to TS yet
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+            meta.config.maxPostsPerPage as number,
             settings.postsPerPage ? settings.postsPerPage : defaultPostsPerPage,
             defaultPostsPerPage
         );
-        settings.userLang = settings.userLang || meta.config.defaultLang || 'en-GB';
+        // The next line calls a function in a module that has not been updated to TS yet
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+        settings.userLang = settings.userLang || meta.config.defaultLang as string || 'en-GB' as string;
         settings.acpLang = settings.acpLang || settings.userLang;
         settings.topicPostSort = getSetting(settings, 'topicPostSort', 'oldest_to_newest') as string;
         settings.categoryTopicSort = getSetting(settings, 'categoryTopicSort', 'newest_to_oldest') as string;
@@ -82,8 +97,8 @@ export default function (User: UserType): void {
         settings.scrollToMyPost = getSetting(settings, 'scrollToMyPost', true) as boolean;
         settings.categoryWatchState = getSetting(settings, 'categoryWatchState', 'notwatching') as string;
 
-        const notificationTypes = await notifications.getAllNotificationTypes();
-        notificationTypes.forEach((notificationType) => {
+        const notificationTypes: string[] = await notifications.getAllNotificationTypes();
+        notificationTypes.forEach((notificationType: string) => {
             settings[notificationType] = getSetting(settings, notificationType, 'notification') as string;
         });
 
@@ -92,14 +107,20 @@ export default function (User: UserType): void {
 
     function getSetting(settings: SettingsObject, key: string, defaultValue: boolean | string | number): boolean | string | number{
         if (settings[key] || settings[key] === 0) {
-            return settings[key];
+            return settings[key] as boolean | string | number;
+        // The next line calls a function in a module that has not been updated to TS yet
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         } else if (meta.config[key] || meta.config[key] === 0) {
-            return meta.config[key];
+        // The next line calls a function in a module that has not been updated to TS yet
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+            return meta.config[key] as boolean | string | number;
         }
         return defaultValue;
     }
 
     User.saveSettings = async function (uid: number, data: SettingsObject): Promise<SettingsObject> {
+        // The next line calls a function in a module that has not been updated to TS yet
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         const maxPostsPerPage = meta.config.maxPostsPerPage || 20;
         if (
             !data.postsPerPage ||
@@ -108,7 +129,8 @@ export default function (User: UserType): void {
         ) {
             throw new Error(`[[error:invalid-pagination-value, 2, ${maxPostsPerPage}]]`);
         }
-
+        // The next line calls a function in a module that has not been updated to TS yet
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         const maxTopicsPerPage = meta.config.maxTopicsPerPage || 20;
         if (
             !data.topicsPerPage ||
@@ -125,6 +147,8 @@ export default function (User: UserType): void {
         if (data.acpLang && !languageCodes.includes(data.acpLang)) {
             throw new Error('[[error:invalid-language]]');
         }
+        // The next line calls a function in a module that has not been updated to TS yet
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         data.userLang = data.userLang || meta.config.defaultLang;
 
         plugins.hooks.fire('action:user.saveSettings', { uid: uid, settings: data });
@@ -178,4 +202,4 @@ export default function (User: UserType): void {
 
         await db.setObjectField(`user:${uid}:settings`, key, value);
     };
-};
+}
